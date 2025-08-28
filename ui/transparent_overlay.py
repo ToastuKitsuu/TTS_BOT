@@ -1,24 +1,29 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QSizePolicy, QScrollArea
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QLabel,
+    QSizePolicy, QScrollArea
+)
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QColor
+
 
 class ChatOverlay(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowFlags(
-            Qt.FramelessWindowHint |
-            Qt.WindowStaysOnTopHint |
-            Qt.Tool
-        )
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(600, 400)
-        self.setStyleSheet("background: transparent;")
 
+        self.setWindowTitle("Chat Overlay")
+        self.resize(400, 400)  # Resizable window with title bar
+
+        # Set solid green background (for OBS chroma key)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: rgb(0, 255, 0);  /* OBS will key out this green */
+            }
+        """)
+
+        # Layout for chat messages
         self.layout = QVBoxLayout()
         self.layout.setSpacing(5)
 
-        # Scrollable area
         scroll = QScrollArea(self)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
@@ -35,22 +40,25 @@ class ChatOverlay(QWidget):
         self.setLayout(main_layout)
 
         self.message_widgets = []
-        self.max_messages = 10  # keep it clean
+        self.max_messages = 10
 
     def add_message(self, platform: str, user: str, message: str):
-        # Determine color
         if platform.lower() == "youtube":
-            color = "#FF4444"  # Red
+            color = "#FF4444"
         elif platform.lower() == "twitch":
-            color = "#9146FF"  # Purple
+            color = "#9146FF"
         else:
-            color = "#FFFFFF"  # Default white
+            color = "#FFFFFF"
 
         label = QLabel()
-        label.setText(f"<b style='color:{color}'>[{platform.title()}]</b> <span style='color:white'>{user}:</span> <span style='color:white'>{message}</span>")
+        label.setText(
+            f"<b style='color:{color}'>[{platform.title()}]</b> "
+            f"<span style='color:white'>{user}:</span> "
+            f"<span style='color:white'>{message}</span>"
+        )
         label.setStyleSheet("""
             QLabel {
-                background-color: rgba(0, 0, 0, 130);
+                background-color: rgba(0, 0, 0, 130);  /* semi-transparent message bubbles */
                 padding: 6px;
                 border-radius: 8px;
                 font-size: 16px;
@@ -62,7 +70,6 @@ class ChatOverlay(QWidget):
         self.layout.addWidget(label)
         self.message_widgets.append(label)
 
-        # Remove old messages
         if len(self.message_widgets) > self.max_messages:
             old_label = self.message_widgets.pop(0)
             old_label.deleteLater()
@@ -76,9 +83,5 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     overlay = ChatOverlay()
     overlay.show()
-
-    # Example: Add test messages on timer
     QTimer.singleShot(1000, overlay.test_messages)
-
     sys.exit(app.exec_())
-# ui/transparent_overlay.py
