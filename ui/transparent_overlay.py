@@ -1,9 +1,10 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
-    QSizePolicy, QScrollArea
+    QSizePolicy, QScrollArea, QGraphicsDropShadowEffect
 )
 from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QColor, QFont
 
 
 class ChatOverlay(QWidget):
@@ -11,12 +12,12 @@ class ChatOverlay(QWidget):
         super().__init__()
 
         self.setWindowTitle("Chat Overlay")
-        self.resize(400, 400)  # Resizable window with title bar
+        self.resize(400, 400)  # You can resize it now!
 
-        # Set solid green background (for OBS chroma key)
+        # Set solid green background for OBS chroma key
         self.setStyleSheet("""
             QWidget {
-                background-color: rgb(0, 255, 0);  /* OBS will key out this green */
+                background-color: rgb(0, 255, 0);  /* OBS will key this out */
             }
         """)
 
@@ -24,17 +25,20 @@ class ChatOverlay(QWidget):
         self.layout = QVBoxLayout()
         self.layout.setSpacing(5)
 
+        # Scrollable chat area
         scroll = QScrollArea(self)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
         scroll.setStyleSheet("background: transparent;")
 
+        # Chat container inside scroll area
         container = QWidget()
         container.setLayout(self.layout)
         container.setStyleSheet("background: transparent;")
 
         scroll.setWidget(container)
 
+        # Main layout
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll)
         self.setLayout(main_layout)
@@ -43,6 +47,7 @@ class ChatOverlay(QWidget):
         self.max_messages = 10
 
     def add_message(self, platform: str, user: str, message: str):
+        # Platform color
         if platform.lower() == "youtube":
             color = "#FF4444"
         elif platform.lower() == "twitch":
@@ -56,14 +61,28 @@ class ChatOverlay(QWidget):
             f"<span style='color:white'>{user}:</span> "
             f"<span style='color:white'>{message}</span>"
         )
+
+        # Apply better contrast and bold font
         label.setStyleSheet("""
             QLabel {
-                background-color: rgba(0, 0, 0, 130);  /* semi-transparent message bubbles */
+                background-color: rgba(0, 0, 0, 220);
                 padding: 6px;
                 border-radius: 8px;
                 font-size: 16px;
+                color: white;
             }
         """)
+        font = QFont("Arial", 12)
+        font.setBold(True)
+        label.setFont(font)
+
+        # Add drop shadow to improve visibility
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(4)
+        shadow.setOffset(1, 1)
+        shadow.setColor(Qt.black)
+        label.setGraphicsEffect(shadow)
+
         label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         label.setWordWrap(True)
 
@@ -78,6 +97,7 @@ class ChatOverlay(QWidget):
         self.add_message("youtube", "Sakura", "こんにちは！これはテストです 🗾")
         self.add_message("twitch", "EpicGamer", "Let's gooo 🎮🔥")
         self.add_message("youtube", "Aki", "123 numbers become 一二三 😲")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
